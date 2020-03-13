@@ -1,4 +1,219 @@
 # SoalShiftSISOP20_modul2_E05
+## Soal1
+#### Code 1-1:
+```
+int main (int argc, char*argv[]) 
+{
+	bool flag[]={false,false,false};
+	bool error = false;
+	bool nol = false;
+	int sec,min,hour;
+	char path[50];
+	//printf("cmdline args count=%d\n", argc);
+	char buffer[128];
+	if (argc>4){
+	error = true;}
+	printf("%s\n%s\n%s\n%s\n",argv[1],argv[2],argv[3],argv[4]);
+	if(strlen(argv[1])<3){
+		if(strcmp(argv[1], "*") != 0)
+		{
+			if(strcmp(argv[1], "0") == 0){
+				nol = true;
+			}
+			sec = atoi(argv[1]);
+			if(sec>59 || sec<0 || (nol==false && sec==0) || (strlen(argv[1])==2 && sec <10)){
+				error = true;
+			}
+		}
+		else{
+			flag[0]=true;
+			sec = -1;
+		}
+	}
+	else {error = true;}
+	if(strlen(argv[2])<3){
+		if(strcmp(argv[2], "*") != 0)
+		{
+			if(strcmp(argv[2], "0") == 0){
+				nol = true;
+			}
+			min = atoi(argv[2]);
+			if(min>59 || min<0 || (nol==false && min==0) || (strlen(argv[2])==2 && min <10)){
+				error = true;
+			}
+		}
+		else{
+			flag[1]=true;
+			min = -1;
+		}
+	}
+	else {error = true;}
+	if(strlen(argv[3])<3){
+		if(strcmp(argv[3], "*") != 0)
+		{
+			if(strcmp(argv[3], "0") == 0){
+				nol = true;
+			}
+			hour = atoi(argv[3]);
+			if(hour>23 || hour<0 || (nol==false && hour==0) || (strlen(argv[3])==2 && hour <10)){
+				error = true;
+			}
+		}
+		else{
+			flag[2]=true;
+			hour = -1;
+		}
+	}
+	else {error = true;}
+	struct stat stats;
+	strcpy(path,argv[4]);
+	if(stat(path,&stats)!=0){
+		error = true;
+		printf ("Datapath error!\n");
+		exit(EXIT_FAILURE);
+	}
+	if(error==true){
+		printf ("Argument error!! Process stopped\n");
+		exit(EXIT_FAILURE);
+	}
+
+	//DAEMON TEMPLATE	
+	
+	pid_t pid, sid;        // Variabel untuk menyimpan PID
+
+	pid = fork();     // Menyimpan PID dari Child Process
+	/* Keluar saat fork gagal
+	* (nilai variabel pid < 0) */
+	if (pid < 0) {
+		exit(EXIT_FAILURE);
+	}
+
+	/* Keluar saat fork berhasil
+	* (nilai variabel pid adalah PID dari child process) */
+	if (pid > 0) {
+		exit(EXIT_SUCCESS);
+	}
+
+	umask(0);
+
+	sid = setsid();
+	if (sid < 0) {
+		exit(EXIT_FAILURE);
+	}
+
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+```
+Dalam code ini, kita akan menerima 4 argumen, yaitu sec,min,hour,path. Untuk mencegah adanya error pada argument, ada beberapa hal yang diperhatikan, yaitu :
+    • Jika argc lebih dari 4, maka terjadi error
+    • Jika argument waktu (sec,min,hour) diinput sebuah huruf, maka hasil atoi akan menjadi 0, sehingga perlu di check ketika nilai waktu (sec,min,hour) = 0, apakah itu merupakan input user atau kesalahan input dari sebuah huruf yang dilakukan user
+    • Jika panjang argument lebih dari 2 array, maka error, karena waktu hanya membutuhkan paling banyak 2 array
+    • Jika panjang argument = 2, namun hasil atoi dari waktu (sec,min,hour) < 10, maka dipastikan inputan error (salah satu merupakan huruf)
+    • Jika sec < 0 atau sec > 59 maka error
+    • Jika min < 0 atau min > 59 maka error
+    • Jika hour < 0 atau hour > 23 maka error
+    • Jika path tidak ada, maka error
+Dan pada code ini juga, proses pembuatan daemon dilakukan.
+#### Code 1-2:
+```
+	char *argv2[] = {"bash",path,NULL};	
+	while(1){
+		pid_t jalan;
+		time_t t  =time(NULL);
+		struct tm tm = *localtime(&t);
+		/*snprintf(buffer,sizeof(buffer),"%d-%02d-%02d_%02d:%02d:%02d", tm.tm_year + 1900, 			tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);*/
+		 /* First argument is executable name only */
+		
+		if (flag[0]==false && flag[1]==false && flag[2]==false){
+		while(1){
+			if (tm.tm_sec == sec && tm.tm_min == min && tm.tm_hour == hour){
+				if (jalan = fork() == 0){
+				execv("/bin/bash", argv2);
+			}}
+			sleep(1);
+		   t = time(NULL); 
+                        tm = *localtime(&t);
+		}}
+		if (flag[0]==false && flag[1]==false && flag[2]==true){
+		while(1){
+			if (tm.tm_sec == sec && tm.tm_min == min){
+				if (jalan = fork() == 0){
+				execv("/bin/bash", argv2);
+			}}
+			sleep(1);
+			t = time(NULL);
+			tm = *localtime(&t);
+		}}
+		if (flag[0]==false && flag[1]==true && flag[2]==false){
+		while(1){
+			if (tm.tm_sec == sec && tm.tm_hour == hour){
+				if (jalan = fork() == 0){
+				execv("/bin/bash", argv2);
+			}}
+			sleep(1);
+			t = time(NULL);
+			tm = *localtime(&t);
+		}}
+		if (flag[0]==false && flag[1]==true && flag[2]==true){
+		while(1){
+			if (tm.tm_sec == sec){
+				if (jalan = fork() == 0){
+				execv("/bin/bash", argv2);
+			}}
+			sleep(1);
+			t = time(NULL);
+			tm = *localtime(&t);
+		}}
+		if (flag[0]==true && flag[1]==false && flag[2]==false){
+		while(1){
+			if (tm.tm_min == min && tm.tm_hour == hour){
+				if (jalan = fork() == 0){
+				execv("/bin/bash", argv2);
+			}}
+			sleep(1);
+			t = time(NULL);
+			tm = *localtime(&t);
+		}}
+		if (flag[0]==true && flag[1]==false && flag[2]==true){
+		while(1){
+			if (tm.tm_min == min){
+				if (jalan = fork() == 0){
+				execv("/bin/bash", argv2);
+			}}
+			sleep(1);
+			t = time(NULL);
+			tm = *localtime(&t);
+		}}
+		if (flag[0]==true && flag[1]==true && flag[2]==false){
+		while(1){
+			if (tm.tm_hour == hour){
+				if (jalan = fork() == 0){
+				execv("/bin/bash", argv2);
+			}}
+			sleep(1);
+			t = time(NULL);
+			tm = *localtime(&t);
+		}}
+		if (flag[0]==true && flag[1]==true && flag[2]==true){
+		while(1){
+			if (jalan = fork() == 0){
+			execv("/bin/bash", argv2);
+			sleep(1);
+			t = time(NULL);
+			tm = *localtime(&t);
+		}}}
+	}
+ }
+```
+Dalam code ini, proses yang akan dilakukan daemon ialah mengeksekusi file yang diinginkan user sesuai dengan jadwal yang telah diterima. Pertama, kita harus menginisialisasikan child_id untuk membuat fork(). Dimana child ini yang akan menjalankan perintah yang diterima.
+Untuk memilih schedule mana yang akan dipilih, disediakan 3 flag, yaitu :
+    • flag[0] = sec
+    • flag[1] = min
+    • flag[2] = hour
+Ketika flag ini bernilai false, maka menandakan bahwa jadwal perintah dieksekusi diterima oleh system. Namun ketika flag bernilai true, maka menandakan bahwa jadwal perintah dieksekusi tidak diterima oleh system (input = ‘*’), oleh karena itu, program akan mengeksekusinya setiap waktu nya (sec/min/hour).
+Ketika program telah mengetahui schedule mana yang akan digunakan, maka dilakukan loop while (true). Disini lah child akan dijalankan dimana child akan mengeksekusi perintah yang diterima jika waktu saat ini sesuai dengan permintaan user. Namun jika waktu nya belum sesuai, maka program akan sleep selama 1 detik (sleep(1)), dan akan mengupdate waktu saat ini hingga waktu sesuai dengan permintaan user.
+
 ## Soal 3
 #### Code:
 ```
