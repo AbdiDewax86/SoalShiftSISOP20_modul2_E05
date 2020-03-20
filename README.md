@@ -199,10 +199,11 @@ Dan pada code ini juga, proses pembuatan daemon dilakukan.
 		while(1){
 			if (jalan = fork() == 0){
 			execv("/bin/bash", argv2);
+			}
 			sleep(1);
 			t = time(NULL);
 			tm = *localtime(&t);
-		}}}
+		}}
 	}
  }
 ```
@@ -226,34 +227,13 @@ Ketika program telah mengetahui schedule mana yang akan digunakan, maka dilakuka
 #include <unistd.h>
 #include <syslog.h>
 #include <string.h>
+#include <time.h>
+#include <wait.h>
 
-void download (char pathdir[])
-{
-	int i =3;
-	while (i--){
-		sleep(5);
-		pid_t downloads;
-		downloads = fork();
-		if(downloads==0){
-			time_t t2  =time(NULL);
-			struct tm tm = *localtime(&t2);
-			t2 = (t2%1000) + 100;
-			char time[128];
-			snprintf(time,sizeof(time),"%d-%02d-%02d_%02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-			//strcat(pathdir,time);
-			char buffer2[128];
-			char link[128] = "https://picsum.photos/";
-			snprintf(buffer2,sizeof(buffer2),"%ld",t2);
-			strcat(link,buffer2);
-			strcat(pathdir,"/");
-			strcat(pathdir,time);
-			char *argv2[] = {"wget","-O",pathdir,link,NULL};
-			execv("/usr/bin/wget",argv2);
-		}
-	}
-}
-
-int main() {
+int main(int args, char **argv) {
+  if(args != 2){
+    exit(0);
+  }
   pid_t pid, sid;        // Variabel untuk menyimpan PID
 
   pid = fork();     // Menyimpan PID dari Child Process
@@ -277,7 +257,7 @@ int main() {
     exit(EXIT_FAILURE);
   }
 
-  if ((chdir("/")) < 0) {
+  if ((chdir("/home/dimasadh/Documents/Praktikum2/soal2/")) < 0) {
     exit(EXIT_FAILURE);
   }
 
@@ -285,41 +265,119 @@ int main() {
   close(STDOUT_FILENO);
   close(STDERR_FILENO);
 
-  while (1) {
-      	pid_t pid, sid;        // Variabel untuk menyimpan PID
-  	pid = fork();     // Menyimpan PID dari Child Process
- 	 int i =0;
- 	 while (i<2) 
- 	 {
-		pid_t parent;
-		parent = fork();
-		if(parent==0)
+
+  //PROSES MEMBUAT PROGRAM KILL.SH
+  int ppid = getpid();
+  FILE *fp;
+  fp = fopen("kill.sh","w");
+  if(strcmp(argv[1],"-a")==0)
+  {
+	  fprintf(fp,"#!/bin/bash\nkill -9 -%d\nrm kill",ppid);
+  }
+  if(strcmp(argv[1],"-b")==0)
+  {
+	  fprintf(fp,"#!/bin/bash\nkill %d\nrm kill",ppid);
+  }
+  fclose(fp);
+  pid_t kill;
+  //PROSES MENGGANTI CHMOD AGAR EXECUTABLE DAN MENGHILANGKAN .SH
+  if (kill=fork()==0)
+  {
+		pid_t chm;
+		if(chm=fork()==0)
 		{
-			char buffer[128];
-			time_t t  =time(NULL);
-			struct tm tm = *localtime(&t),tm2;
-			snprintf(buffer,sizeof(buffer),"%d-%02d-%02d_%02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-			char pathdir[128] ="/home/dimasadh/Documents/Praktikum2/tess/";
-			strcat(pathdir,buffer);
-			
-			pid_t child1;
-			if (child1=fork()==0){
-				char *argv[] = {"mkdir","-p",pathdir,NULL};
-			    	execv("/bin/mkdir", argv);
+			char *argv[] = {"chmod","+x","kill.sh",NULL};
+			execv("/bin/chmod",argv);
+		}
+		else
+		{
+			wait(NULL);		  
+			char *argv[] = {"mv", "kill.sh", "kill", NULL};
+			execv("/bin/mv",argv);
+		}
+  }
+
+
+  while (1) 
+  {
+	pid_t parent;
+	parent = fork();
+	if(parent==0)
+	{
+		char pathdir[128];
+		time_t t  =time(NULL);
+		struct tm tm = *localtime(&t),tm2;
+		snprintf(pathdir,sizeof(pathdir),"%d-%02d-%02d_%02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+		
+		pid_t child1;
+		//PROSES MEMBUAT DIREKTORI
+		if (child1=fork()==0){
+			char *argv[] = {"mkdir","-p",pathdir,NULL};
+		    	execv("/bin/mkdir", argv);
+		}
+		//PROSES DOWNLOAD
+		else{
+			wait(NULL);
+			if(fork()==0){
+				int i =20;
+				pid_t parent;
+				while (i--){
+					pid_t downloads;
+					downloads = fork();
+					if(downloads==0){
+						time_t t2  =time(NULL);
+						struct tm tm = *localtime(&t2);
+						t2 = (t2%1000) + 100;
+						char time[128];
+						snprintf(time,sizeof(time),"%d-%02d-%02d_%02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1,tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+						char buffer2[128];
+						char link[128] = "https://picsum.photos/";
+						snprintf(buffer2,sizeof(buffer2),"%ld",t2);
+						strcat(link,buffer2);
+						strcat(pathdir,"/");
+						strcat(pathdir,time);
+						char *argv2[] = {"wget","-O",pathdir,link,NULL};
+						execv("/usr/bin/wget",argv2);
+					}
+					else{
+						sleep(5);
+					}
+				}
+			exit(0);
 			}
+			//PROSES ZIP
 			else{
 				wait(NULL);
-				download(pathdir);
+				pid_t zip;
+				char temp [128];
+				strcpy(temp,pathdir);
+				strcat(temp,".zip");
+				if (zip=fork() == 0){
+					char *argv3[] = {"zip", "-r", temp, pathdir, NULL};
+					execv("/usr/bin/zip", argv3);
+				}
+				else{
+					wait(NULL);
+					char *argv4[] = {"rm", "-r", pathdir, NULL};
+					execv("/bin/rm", argv4);
+				}
 			}
-			sleep(10);
 		}
-		i++;
-		sleep(5);
- 	 }
+	}
+	else{
+		sleep(30);
+	}
   }
 }
+
 ```
-Dalam soal 2 sementara, program melalui proses untuk menjadikan daemon program. Dalam daemon program ini, dibuat sebuah proses untuk membuat direktori. Setelah direktori dibuat, dipanggil fungsi download untuk mendownload foto. Path direktori yang telah dibuat lalu dijadikan parameter untuk fungsi download ini, dimana dalam fungsi download, path ini akan diappend dengan time saat foto di download.
+Dalam soal 2, program melalui proses untuk menjadikan daemon program. Dalam daemon program ini, pertama - tama program akan membuat program kill yang executable untuk menghentikan proses yang dijalankan oleh program ini, dimana terdapat 2 opsi berdasarkan input argumen dari user. 
+- Opsi pertama ialah mematikan seluruh proses dari program ini. Menggunakan command "kill -9 -pid".
+- Opsi kedua ialah menunggu proses yang telah berjalan hingga selesai, dan menghentikan proses dari program ini. Menggunakan command "kill pid"
+Untuk membuat program ini, digunakan fungsi "fopen" untuk membuat file, dan "fprintf" untuk menulis kedalam file tersebut
+Ketika program kill ini dijalankan, maka command akan berjalan dan kemudian file dari program kill akan dihapus.
+
+Kemudian, program membuat sebuah proses untuk membuat direktori tiap 30 detik per direktorinya. Setelah direktori dibuat, program akan mendownload foto dengan ukuran "t2 = (t2%1000) + 100" berdasarkan time dan dari "https://picsum.photos/" sebanyak 20 buah kedalam direktori tersebut tiap 5 detik per fotonya. Setelah direktori telah diisi oleh 20 foto yang didownload, maka direktori tersebut akan di zip dan folder dari direktori tersebut dihapus.
 
 ## Soal 3
 #### Code:
