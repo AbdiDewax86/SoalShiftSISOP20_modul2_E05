@@ -212,6 +212,7 @@ Untuk memilih schedule mana yang akan dipilih, disediakan 3 flag, yaitu :
 - flag[0] = sec
 - flag[1] = min
 - flag[2] = hour
+
 Ketika flag ini bernilai false, maka menandakan bahwa jadwal perintah dieksekusi diterima oleh system. Namun ketika flag bernilai true, maka menandakan bahwa jadwal perintah dieksekusi tidak diterima oleh system (input = ‘*’), oleh karena itu, program akan mengeksekusinya setiap waktu nya (sec/min/hour).
 Ketika program telah mengetahui schedule mana yang akan digunakan, maka dilakukan loop while (true). Disini lah child akan dijalankan dimana child akan mengeksekusi perintah yang diterima jika waktu saat ini sesuai dengan permintaan user. Namun jika waktu nya belum sesuai, maka program akan sleep selama 1 detik (sleep(1)), dan akan mengupdate waktu saat ini hingga waktu sesuai dengan permintaan user.
 
@@ -374,6 +375,7 @@ int main(int args, char **argv) {
 Dalam soal 2, program melalui proses untuk menjadikan daemon program. Dalam daemon program ini, pertama - tama program akan membuat program kill yang executable untuk menghentikan proses yang dijalankan oleh program ini, dimana terdapat 2 opsi berdasarkan input argumen dari user. 
 - Opsi pertama ialah mematikan seluruh proses dari program ini. Menggunakan command "kill -9 -pid".
 - Opsi kedua ialah menunggu proses yang telah berjalan hingga selesai, dan menghentikan proses dari program ini. Menggunakan command "kill pid"
+
 Untuk membuat program ini, digunakan fungsi "fopen" untuk membuat file, dan "fprintf" untuk menulis kedalam file tersebut. Ketika program kill ini dijalankan, maka command akan berjalan dan kemudian file dari program kill akan dihapus.
 
 Kemudian, program membuat sebuah proses untuk membuat direktori tiap 30 detik per direktorinya. Setelah direktori dibuat, program akan mendownload foto dengan ukuran "t2 = (t2%1000) + 100" berdasarkan time dan dari "https://picsum.photos/" sebanyak 20 buah kedalam direktori tersebut tiap 5 detik per fotonya. Setelah direktori telah diisi oleh 20 foto yang didownload, maka direktori tersebut akan di zip dan folder dari direktori tersebut dihapus.
