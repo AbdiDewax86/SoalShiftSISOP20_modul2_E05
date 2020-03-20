@@ -202,12 +202,14 @@ int main (int argc, char*argv[])
 			tm = *localtime(&t);
 		}}
 		if (flag[0]==true && flag[1]==true && flag[2]==true){
+			int i=0;
 		while(1){
 			if (jalan = fork() == 0){
 			execv("/bin/bash", argv2);
+			}
 			sleep(1);
 			t = time(NULL);
 			tm = *localtime(&t);
-		}}}
+		}}
 	}
  }
